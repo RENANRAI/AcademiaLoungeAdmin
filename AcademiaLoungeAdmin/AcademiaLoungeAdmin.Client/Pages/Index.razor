@@ -1,0 +1,24 @@
+﻿@page "/"
+@inject AcademiaLoungeAdmin.Client.Services.TokenStore TokenStore
+@inject AcademiaLoungeAdmin.Client.Services.ApiClient Api
+@inject NavigationManager Nav
+
+<MudText Typo="Typo.h5">Dashboard</MudText>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var token = await TokenStore.GetAsync();
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            Nav.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        Api.SetBearer(token);
+
+        StateHasChanged();
+    }
+}

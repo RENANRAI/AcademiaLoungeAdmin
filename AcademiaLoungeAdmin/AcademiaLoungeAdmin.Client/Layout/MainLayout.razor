@@ -1,0 +1,45 @@
+﻿@inherits LayoutComponentBase
+@using MudBlazor
+@inject NavigationManager Nav
+@inject AcademiaLoungeAdmin.Client.Services.TokenStore TokenStore
+@inject AcademiaLoungeAdmin.Client.Services.ApiClient Api
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudText Typo="Typo.h6">Academia Lounge - Admin</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Text" OnClick="Logout">Sair</MudButton>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Responsive" Elevation="1">
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+            <MudNavLink Href="/alunos" Icon="@Icons.Material.Filled.People">Alunos</MudNavLink>
+            <MudNavLink Href="/planos" Icon="@Icons.Material.Filled.ViewList">Planos</MudNavLink>
+            <MudNavLink Href="/assinaturas" Icon="@Icons.Material.Filled.Assignment">Assinaturas</MudNavLink>
+            <MudNavLink Href="/pagamentos" Icon="@Icons.Material.Filled.Payments">Pagamentos</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent Class="pa-4">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+
+    void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private async Task Logout()
+    {
+        await TokenStore.RemoveAsync();
+        Api.SetBearer(null);
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}

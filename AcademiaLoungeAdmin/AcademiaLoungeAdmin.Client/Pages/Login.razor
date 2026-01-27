@@ -1,0 +1,62 @@
+﻿@page "/login"
+@using System.Net.Http.Json
+@using MudBlazor
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject AcademiaLoungeAdmin.Client.Services.TokenStore TokenStore
+@inject AcademiaLoungeAdmin.Client.Services.ApiClient Api
+
+<MudPaper Class="pa-6" Style="max-width:420px; margin: 80px auto;">
+    <MudText Typo="Typo.h5" Class="mb-4">Entrar</MudText>
+
+    <MudTextField @bind-Value="_login" Label="Login" Variant="Variant.Outlined" Class="mb-3" />
+    <MudTextField @bind-Value="_senha" Label="Senha" Variant="Variant.Outlined" InputType="InputType.Password" Class="mb-4" />
+    <MudButton Variant="Variant.Filled" FullWidth="true" OnClick="Entrar" Disabled="_loading">
+        @(_loading ? "ENTRANDO..." : "ENTRAR")
+    </MudButton>
+
+</MudPaper>
+
+@code {
+    private string _login = "admin";
+    private string _senha = "admin123";
+    private bool _loading;
+
+    private async Task Entrar()
+    {
+        _loading = true;
+        try
+        {
+            var resp = await Api.Http.PostAsJsonAsync("/api/auth/login", new
+            {
+                login = _login,
+                senha = _senha
+            });
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Login ou senha inválidos.", Severity.Error);
+                return;
+            }
+
+            var data = await resp.Content.ReadFromJsonAsync<LoginResponse>();
+            if (data is null || string.IsNullOrWhiteSpace(data.Token))
+            {
+                Snackbar.Add("Falha ao obter token.", Severity.Error);
+                return;
+            }
+
+            await TokenStore.SetAsync(data.Token);
+            Api.SetBearer(data.Token);
+
+            Snackbar.Add("Logado com sucesso!", Severity.Success);
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private record LoginResponse(string Token, string ExpiresAt, string UserId, string Nome, string Login, int Perfil);
+}
